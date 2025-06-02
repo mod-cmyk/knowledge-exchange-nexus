@@ -1,11 +1,10 @@
 
-import { Edit, Mail, Calendar, MapPin } from 'lucide-react';
+import { Edit, Mail, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface UserProfileProps {
   user: any;
-  onUpdate: (user: any) => void;
 }
 
 export const UserProfile = ({ user }: UserProfileProps) => {
@@ -16,7 +15,7 @@ export const UserProfile = ({ user }: UserProfileProps) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img
-                src={user.avatar}
+                src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`}
                 alt={user.name}
                 className="w-24 h-24 rounded-full bg-gray-200"
               />
@@ -30,7 +29,7 @@ export const UserProfile = ({ user }: UserProfileProps) => {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Calendar className="w-4 h-4" />
-                    <span>Joined this month</span>
+                    <span>Active member</span>
                   </div>
                 </div>
               </div>
@@ -49,13 +48,13 @@ export const UserProfile = ({ user }: UserProfileProps) => {
             <CardTitle className="flex items-center space-x-2 text-green-600">
               <span>Skills I Can Teach</span>
               <span className="text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                {user.skillsToTeach.length}
+                {user.skillsToTeach?.length || 0}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {user.skillsToTeach.map((skill: string, index: number) => (
+              {user.skillsToTeach?.map((skill: string, index: number) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200"
@@ -63,11 +62,13 @@ export const UserProfile = ({ user }: UserProfileProps) => {
                   <span className="font-medium text-green-800">{skill}</span>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                      Expert
+                      Available
                     </span>
                   </div>
                 </div>
-              ))}
+              )) || (
+                <p className="text-gray-500 text-center py-4">No teaching skills added yet</p>
+              )}
             </div>
             <Button className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white">
               Add New Skill
@@ -80,13 +81,13 @@ export const UserProfile = ({ user }: UserProfileProps) => {
             <CardTitle className="flex items-center space-x-2 text-blue-600">
               <span>Skills I Want to Learn</span>
               <span className="text-sm bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                {user.skillsToLearn.length}
+                {user.skillsToLearn?.length || 0}
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {user.skillsToLearn.map((skill: string, index: number) => (
+              {user.skillsToLearn?.map((skill: string, index: number) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
@@ -94,11 +95,13 @@ export const UserProfile = ({ user }: UserProfileProps) => {
                   <span className="font-medium text-blue-800">{skill}</span>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      Beginner
+                      Seeking
                     </span>
                   </div>
                 </div>
-              ))}
+              )) || (
+                <p className="text-gray-500 text-center py-4">No learning goals added yet</p>
+              )}
             </div>
             <Button className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white">
               Add Learning Goal
@@ -112,7 +115,7 @@ export const UserProfile = ({ user }: UserProfileProps) => {
           <div className="text-center">
             <h3 className="text-xl font-bold mb-2">Ready to Share Your Knowledge?</h3>
             <p className="mb-4 opacity-90">
-              Your profile is complete! Start connecting with learners who need your expertise.
+              Your profile is active! Start connecting with learners who need your expertise.
             </p>
             <div className="flex justify-center space-x-4">
               <Button className="bg-white text-purple-600 hover:bg-gray-100">

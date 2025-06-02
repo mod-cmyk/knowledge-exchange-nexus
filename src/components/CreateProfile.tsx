@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
-interface CreateProfileProps {
-  onProfileCreated: (user: any) => void;
-}
-
-export const CreateProfile = ({ onProfileCreated }: CreateProfileProps) => {
-  const [name, setName] = useState('');
-  const [bio, setBio] = useState('');
+export const CreateProfile = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [skillsToTeach, setSkillsToTeach] = useState<string[]>([]);
   const [skillsToLearn, setSkillsToLearn] = useState<string[]>([]);
   const [newTeachSkill, setNewTeachSkill] = useState('');
@@ -38,18 +38,53 @@ export const CreateProfile = ({ onProfileCreated }: CreateProfileProps) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name && skillsToTeach.length > 0 && skillsToLearn.length > 0) {
-      const user = {
-        id: Date.now(),
-        name,
-        bio,
-        skillsToTeach,
-        skillsToLearn,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
-      };
-      onProfileCreated(user);
+    if (!user || skillsToTeach.length === 0 || skillsToLearn.length === 0) return;
+
+    setLoading(true);
+
+    try {
+      // Save teaching skills
+      const teachingSkills = skillsToTeach.map(skill => ({
+        user_id: user.id,
+        skill_name: skill,
+      }));
+
+      const { error: teachError } = await supabase
+        .from('user_skills_teach')
+        .insert(teachingSkills);
+
+      if (teachError) throw teachError;
+
+      // Save learning skills
+      const learningSkills = skillsToLearn.map(skill => ({
+        user_id: user.id,
+        skill_name: skill,
+      }));
+
+      const { error: learnError } = await supabase
+        .from('user_skills_learn')
+        .insert(learningSkills);
+
+      if (learnError) throw learnError;
+
+      toast({
+        title: "Profile Created!",
+        description: "Your skills have been saved successfully.",
+      });
+
+      // Refresh the page to show the updated profile
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error saving skills:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save your skills. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -57,45 +92,19 @@ export const CreateProfile = ({ onProfileCreated }: CreateProfileProps) => {
     <div className="max-w-2xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-          Welcome to SkillSwap!
+          Complete Your Profile
         </h2>
         <p className="text-gray-600 text-lg">
-          Create your profile to start exchanging knowledge with fellow learners
+          Add your skills to start exchanging knowledge with fellow learners
         </p>
       </div>
 
       <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Create Your Profile</CardTitle>
+          <CardTitle className="text-2xl text-center">Add Your Skills</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your full name"
-                className="w-full"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bio (Optional)
-              </label>
-              <Textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell us a bit about yourself..."
-                className="w-full"
-                rows={3}
-              />
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Skills I Can Teach
@@ -175,9 +184,9 @@ export const CreateProfile = ({ onProfileCreated }: CreateProfileProps) => {
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 shadow-lg"
-              disabled={!name || skillsToTeach.length === 0 || skillsToLearn.length === 0}
+              disabled={loading || skillsToTeach.length === 0 || skillsToLearn.length === 0}
             >
-              Create Profile & Start Learning
+              {loading ? 'Saving...' : 'Complete Profile & Start Learning'}
             </Button>
           </form>
         </CardContent>

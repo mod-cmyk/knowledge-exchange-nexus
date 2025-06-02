@@ -8,17 +8,17 @@ interface DashboardProps {
 
 export const Dashboard = ({ currentUser }: DashboardProps) => {
   const stats = [
-    { label: 'Skills to Teach', value: currentUser.skillsToTeach.length, icon: BookOpen, color: 'text-green-600' },
-    { label: 'Skills to Learn', value: currentUser.skillsToLearn.length, icon: TrendingUp, color: 'text-blue-600' },
-    { label: 'Potential Matches', value: '12', icon: Users, color: 'text-purple-600' },
-    { label: 'Sessions This Week', value: '3', icon: Calendar, color: 'text-orange-600' },
+    { label: 'Skills to Teach', value: currentUser?.skillsToTeach?.length || 0, icon: BookOpen, color: 'text-green-600' },
+    { label: 'Skills to Learn', value: currentUser?.skillsToLearn?.length || 0, icon: TrendingUp, color: 'text-blue-600' },
+    { label: 'Potential Matches', value: '0', icon: Users, color: 'text-purple-600' },
+    { label: 'Active Sessions', value: '0', icon: Calendar, color: 'text-orange-600' },
   ];
 
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Welcome back, {currentUser.name}! 👋
+          Welcome back, {currentUser?.name || 'User'}! 👋
         </h2>
         <p className="text-gray-600">Ready to share knowledge and learn something new today?</p>
       </div>
@@ -52,14 +52,18 @@ export const Dashboard = ({ currentUser }: DashboardProps) => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {currentUser.skillsToTeach.map((skill: string, index: number) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-                >
-                  {skill}
-                </span>
-              ))}
+              {currentUser?.skillsToTeach?.length > 0 ? (
+                currentUser.skillsToTeach.map((skill: string, index: number) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <p className="text-gray-500">No teaching skills added yet</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -73,14 +77,18 @@ export const Dashboard = ({ currentUser }: DashboardProps) => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {currentUser.skillsToLearn.map((skill: string, index: number) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                >
-                  {skill}
-                </span>
-              ))}
+              {currentUser?.skillsToLearn?.length > 0 ? (
+                currentUser.skillsToLearn.map((skill: string, index: number) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                  >
+                    {skill}
+                  </span>
+                ))
+              ) : (
+                <p className="text-gray-500">No learning goals added yet</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -102,7 +110,7 @@ export const Dashboard = ({ currentUser }: DashboardProps) => {
             </button>
             <button className="p-4 bg-white/20 rounded-lg hover:bg-white/30 transition-colors duration-200">
               <BookOpen className="w-6 h-6 mb-2" />
-              <p className="font-medium">Join Study Group</p>
+              <p className="font-medium">Browse Skills</p>
             </button>
           </div>
         </CardContent>
