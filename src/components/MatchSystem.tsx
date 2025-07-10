@@ -1,52 +1,50 @@
 
-import { useState } from 'react';
-import { MessageCircle, Star, Users } from 'lucide-react';
+import { MessageCircle, Star, Users, ArrowRightLeft, BookOpen, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useMatches } from '@/hooks/useMatches';
+import { Badge } from '@/components/ui/badge';
 
 interface MatchSystemProps {
   currentUser: any;
 }
 
 export const MatchSystem = ({ currentUser }: MatchSystemProps) => {
-  const [matches] = useState([
-    {
-      id: 1,
-      name: 'Sarah Chen',
-      bio: 'Computer Science student passionate about web development and design',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-      skillsToTeach: ['React', 'JavaScript', 'UI/UX Design'],
-      skillsToLearn: ['Python', 'Data Science', 'Machine Learning'],
-      matchScore: 95,
-      commonSkills: ['JavaScript', 'Python']
-    },
-    {
-      id: 2,
-      name: 'Alex Rodriguez',
-      bio: 'Marketing student with a love for data analysis and photography',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=alex',
-      skillsToTeach: ['Photography', 'Adobe Photoshop', 'Social Media Marketing'],
-      skillsToLearn: ['Web Development', 'JavaScript', 'SEO'],
-      matchScore: 87,
-      commonSkills: ['JavaScript', 'Marketing']
-    },
-    {
-      id: 3,
-      name: 'Maya Patel',
-      bio: 'Psychology major interested in research methods and statistics',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=maya',
-      skillsToTeach: ['Research Methods', 'SPSS', 'Academic Writing'],
-      skillsToLearn: ['Data Visualization', 'Python', 'Statistics'],
-      matchScore: 78,
-      commonSkills: ['Statistics', 'Research']
-    }
-  ]);
+  const { matches, loading } = useMatches(currentUser);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Finding your perfect matches...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (matches.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found yet</h3>
+        <p className="text-gray-600 mb-6">
+          We couldn't find any compatible users right now. Try adding more skills to your profile or check back later!
+        </p>
+        <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white">
+          Update My Skills
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Perfect Matches 🎯</h2>
-        <p className="text-gray-600">Connect with fellow learners who complement your skills</p>
+        <p className="text-gray-600">
+          Found {matches.length} compatible learners based on your skills and interests
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -55,7 +53,7 @@ export const MatchSystem = ({ currentUser }: MatchSystemProps) => {
             <CardHeader className="pb-4">
               <div className="flex items-center space-x-4">
                 <img
-                  src={match.avatar}
+                  src={match.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${match.id}`}
                   alt={match.name}
                   className="w-16 h-16 rounded-full bg-gray-200"
                 />
@@ -69,37 +67,72 @@ export const MatchSystem = ({ currentUser }: MatchSystemProps) => {
                   </div>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">{match.bio}</p>
+              {match.bio && (
+                <p className="text-sm text-gray-600 mt-2 line-clamp-2">{match.bio}</p>
+              )}
             </CardHeader>
             
             <CardContent className="space-y-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Can Teach You:</h4>
-                <div className="flex flex-wrap gap-1">
-                  {match.skillsToTeach.slice(0, 3).map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+              {/* Mutual Exchange Skills (Highest Priority) */}
+              {match.mutualExchangeSkills.length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <ArrowRightLeft className="w-4 h-4 text-purple-600" />
+                    <h4 className="text-sm font-medium text-purple-600">Perfect Exchange</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {match.mutualExchangeSkills.slice(0, 3).map((skill, index) => (
+                      <Badge key={index} className="bg-purple-100 text-purple-700 hover:bg-purple-200">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Wants to Learn:</h4>
-                <div className="flex flex-wrap gap-1">
-                  {match.skillsToLearn.slice(0, 3).map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
-                    >
-                      {skill}
-                    </span>
-                  ))}
+              {/* Skills they can teach me */}
+              {match.skillsToTeach.filter(skill => 
+                currentUser?.skillsToLearn?.includes(skill)
+              ).length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <BookOpen className="w-4 h-4 text-green-600" />
+                    <h4 className="text-sm font-medium text-green-600">Can Teach You</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {match.skillsToTeach
+                      .filter(skill => currentUser?.skillsToLearn?.includes(skill))
+                      .slice(0, 3)
+                      .map((skill, index) => (
+                        <Badge key={index} className="bg-green-100 text-green-700 hover:bg-green-200">
+                          {skill}
+                        </Badge>
+                      ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Skills I can teach them */}
+              {currentUser?.skillsToTeach?.filter(skill => 
+                match.skillsToLearn.includes(skill)
+              ).length > 0 && (
+                <div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Target className="w-4 h-4 text-blue-600" />
+                    <h4 className="text-sm font-medium text-blue-600">Wants to Learn</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {currentUser.skillsToTeach
+                      .filter(skill => match.skillsToLearn.includes(skill))
+                      .slice(0, 3)
+                      .map((skill, index) => (
+                        <Badge key={index} className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                          {skill}
+                        </Badge>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-2 space-y-2">
                 <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white">
@@ -119,12 +152,20 @@ export const MatchSystem = ({ currentUser }: MatchSystemProps) => {
       <Card className="border-0 bg-gradient-to-r from-green-500 to-blue-500 text-white">
         <CardContent className="p-6">
           <div className="text-center">
-            <h3 className="text-xl font-bold mb-2">Can't find the right match?</h3>
-            <p className="mb-4 opacity-90">Join a study group or create your own learning circle!</p>
-            <Button className="bg-white text-green-600 hover:bg-gray-100">
-              <Users className="w-4 h-4 mr-2" />
-              Browse Study Groups
-            </Button>
+            <h3 className="text-xl font-bold mb-2">Want more matches?</h3>
+            <p className="mb-4 opacity-90">
+              Add more skills to your profile or join study groups to find even more learning opportunities!
+            </p>
+            <div className="flex justify-center space-x-3">
+              <Button className="bg-white text-green-600 hover:bg-gray-100">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Add More Skills
+              </Button>
+              <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                <Users className="w-4 h-4 mr-2" />
+                Browse Study Groups
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
