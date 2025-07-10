@@ -24,10 +24,11 @@ export const AuthPage = () => {
     setLoading(true);
 
     try {
+      // Use signInWithOtp with type 'email' to send a 6-digit OTP code
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          shouldCreateUser: true,
         }
       });
 
@@ -36,7 +37,7 @@ export const AuthPage = () => {
       setOtpSent(true);
       toast({
         title: "OTP Sent",
-        description: "Please check your email for the verification code.",
+        description: "Please check your email for the 6-digit verification code.",
       });
     } catch (error: any) {
       console.error('OTP send error:', error);
@@ -150,7 +151,7 @@ export const AuthPage = () => {
           </CardTitle>
           <p className="text-gray-600">
             {useOtp 
-              ? (otpSent ? 'Enter the 6-digit code sent to your email' : 'We\'ll send a verification code to your email')
+              ? (otpSent ? 'Enter the 6-digit code sent to your email' : 'We\'ll send a 6-digit verification code to your email')
               : (isSignUp 
                 ? 'Join the community and start sharing knowledge' 
                 : 'Sign in to continue your learning journey'
@@ -164,7 +165,7 @@ export const AuthPage = () => {
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div className="text-center">
                   <p className="text-sm text-gray-600 mb-4">
-                    Code sent to: <strong>{email}</strong>
+                    6-digit code sent to: <strong>{email}</strong>
                   </p>
                   <InputOTP
                     maxLength={6}
@@ -229,7 +230,7 @@ export const AuthPage = () => {
                   className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
                   disabled={loading}
                 >
-                  {loading ? 'Sending...' : 'Send Verification Code'}
+                  {loading ? 'Sending...' : 'Send 6-Digit Code'}
                 </Button>
 
                 <div className="text-center">
